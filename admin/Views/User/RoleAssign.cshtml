@@ -1,0 +1,48 @@
+﻿@using view_model.System.Users
+@model RoleAssignRequest
+
+@{
+    ViewData["Title"] = "RoleAssign User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Users</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item">Users</li>
+                    <li class="breadcrumb-item active">Role</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <form method="post" asp-action="roleassign" asp-controller="user">
+
+                <div class="card-body">
+                    <input type="hidden" asp-for="Id" />
+                    @for (var i = 0; i < Model.Roles.Count; i++)
+                    {
+                        <div class="form-check form-group">
+                            <input class="form-check-input" type="checkbox" asp-for="Roles[i].Selected">
+                            <label class="form-check-label">@Model.Roles[i].Name</label>
+                            <input type="hidden" asp-for="Roles[i].Id" />
+                            <input type="hidden" asp-for="Roles[i].Name" />
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <a class="btn btn-secondary" asp-action="" asp-controller="user">Back To List</a>
+                    <button type="submit" class="btn btn-primary">Approval</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>

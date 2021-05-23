@@ -1,0 +1,115 @@
+﻿@model view_model.Catalog.Products.ProductCreateRequest
+
+@{
+    ViewData["Title"] = "Create Product";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string valMessage = TempData["Failure"] as string;
+}
+@section Scripts{
+    <script src="~/plugins/jquery/jquery.min.js"></script>
+    <script src="~/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/plugins/summernote/summernote-bs4.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var mesg = "@Html.Raw(TempData["Failure"])";
+            if(mesg != "") toastr.error(mesg);
+            bsCustomFileInput.init();
+            $('#summernote').summernote();
+        });
+    </script>
+}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Products</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Product</a></li>
+                    <li class="breadcrumb-item active">Create</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Form Create <small>Product</small></h3>
+                    </div>
+                    <form id="quickForm" novalidate="novalidate" asp-action="Create" enctype="multipart/form-data" asp-controller="Product">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label asp-for="Name" class="control-label"></label>
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="row">
+                                <div class="col-4">
+                                    <label asp-for="OriginalPrice" class="control-label">Original Price (Dolar)</label>
+                                    <input asp-for="OriginalPrice" min="0" value="50000" type="number" class="form-control" />
+                                    <span asp-validation-for="OriginalPrice" class="text-danger"></span>
+                                </div>
+                                <div class="col-4">
+                                    <label asp-for="Price" class="control-label">Price (Dolar)</label>
+                                    <input asp-for="Price" min="0" type="number" value="50000" class="form-control" />
+                                    <span asp-validation-for="Price" class="text-danger"></span>
+                                </div>
+                                <div class="col-4">
+                                    <label asp-for="Stock" class="control-label"></label>
+                                    <input asp-for="Stock" min="0" value="10" type="number" class="form-control" />
+                                    <span asp-validation-for="Stock" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Description" class="control-label"></label>
+                                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Details" class="control-label"></label>
+                                <textarea id="summernote" asp-for="Details" class="form-control" style="display: none;"> 
+                                </textarea>
+                                <span asp-validation-for="Details" class="text-danger"></span>
+                            </div>
+                            <div class="row">
+                                <div class="col-3">
+                                    <label asp-for="SeoDescription" class="control-label"></label>
+                                    <input asp-for="SeoDescription" class="form-control" />
+                                    <span asp-validation-for="SeoDescription" class="text-danger"></span>
+                                </div>
+                                <div class="col-4">
+                                    <label asp-for="SeoTitle" class="control-label"></label>
+                                    <input asp-for="SeoTitle" class="form-control" />
+                                    <span asp-validation-for="SeoTitle" class="text-danger"></span>
+                                </div>
+                                <div class="col-5">
+                                    <label asp-for="SeoAlias" class="control-label"></label>
+                                    <input asp-for="SeoAlias" class="form-control" />
+                                    <span asp-validation-for="SeoAlias" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="ThumbnailImage" class="control-label"></label>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" asp-for="ThumbnailImage" id="customFile">
+                                    <label class="custom-file-label" for="customFile">Choose file</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a class="btn btn-secondary" asp-controller="product" asp-action="">Back To List</a>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+

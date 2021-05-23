@@ -1,0 +1,103 @@
+﻿@using view_model.Catalog.Shipments;
+@using view_model.Common;
+@using admin_webapp.Models; 
+@{
+    ViewData["Title"] = "Shipment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@model PagedResult<ShipmentVm>
+@{ 
+    int count = 1;
+    List<StatusShipmentViewModel> status = ViewBag.StatusShipment;
+}
+@section Scripts{
+    <script type="text/javascript">
+        $(function () {
+            var mesgSuccess = "@Html.Raw(TempData["Success"])";
+            var mesgFailure = "@Html.Raw(TempData["Failure"])";
+            if (mesgSuccess != "") toastr.success(mesgSuccess);
+            if (mesgFailure != "") toastr.error(mesgFailure);
+        });
+    </script>
+}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Shipments</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item">Shipments</li>
+                    <li class="breadcrumb-item active">List</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-tools">
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="width: 10px">#</th>
+                            <th>Code</th>
+                            <th>Sender</th>
+                            <th>Receiver</th>
+                            <th>Shipment</th>
+                            <th>Payment Format</th>
+                            <th>Status</th>
+                            <th>Note Shipping</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                        <tr>
+                            <td><strong>@count</strong></td>
+                            <td>@item.Code</td>
+                            <td>
+                                <strong><a href="javascript:void(0)" style="font-size:20px">@item.PhoneNumberSender</a></strong>
+                                <p>@item.NameSender</p>
+                               
+                            </td>
+                            <td>
+                                <strong><a href="javascript:void(0)" style="font-size:20px">@item.PhoneNumberReceiver</a></strong> - @item.NameReceiver
+                                <p>@item.AddressReceiver</p>
+                            </td>
+                            <td>@item.NoteOrder</td>
+                            <td>@item.PaymentFormat</td>
+                            <td>
+                                <select class="form-control" name="status">
+                                @for (var i = 0; i < status.Count; i++)
+                                {
+                                    <option selected="@(item.Status.ToLower().Equals(status[i].Name.ToLower())?true:false)" value="@status[i].Value">@status[i].Name</option>
+                                }
+                                </select>
+                            </td>
+                            <td>@item.NoteShipping</td>
+                            <td><a href="#" data-toggle="tooltip" title="Update"><i class="fa fa-edit"></i></a></td>
+                        </tr>
+                            count++;
+                        }
+                        @if (Model.Items.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center">Sorry , No data avaliable</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @await Component.InvokeAsync("Pager", Model)
+        </div>
+    </div>
+</section>
+

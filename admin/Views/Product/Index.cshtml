@@ -1,0 +1,118 @@
+﻿@using view_model.Common;
+@using view_model.Catalog.Products;
+@model PagedResult<ProductVm>
+@{
+    var count = 1;
+}
+@{
+    ViewData["Title"] = "Products";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section Scripts{
+    <script type="text/javascript">
+        $(function () {
+            var mesgSuccess = "@Html.Raw(TempData["Success"])";
+            var mesgFailure = "@Html.Raw(TempData["Failure"])";
+            if (mesgSuccess != "") toastr.success(mesgSuccess);
+            if (mesgFailure != "") toastr.error(mesgFailure);
+        });
+    </script>
+}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Products</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item">Products</li>
+                    <li class="breadcrumb-item active">List</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-tools">
+                    <form asp-action="" method="get" asp-controller="product" asp-route-categoryid="@ViewBag.categoryId" asp-route-keyword="@ViewBag.keyword" style="padding-bottom:10px">
+                        <div class="d-flex flex-row-reverse">
+                            <div class="input-group input-group-sm" style="width: 300px;">
+                                <input type="text" name="keyword" class="form-control float-right" placeholder="Search by name" value="@ViewBag.keyword">
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-default">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-group input-group-sm col-4">
+                                @Html.DropDownList("categoryid", (List<SelectListItem>)ViewData["OptionsCategory"], "Choose category", new { @class = "custom-select", @onchange = "this.form.submit()" })
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <a class="btn btn-success" asp-action="create" asp-controller="product">Create New Product</a>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="width: 10px">#</th>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Pucharse Price (Dolar)</th>
+                            <th>Price (Dolar)</th>
+                            <th>Stock</th>
+                            <th></th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td><strong>@count</strong></td>
+                                @if (item.ThumbnailImage != null)
+                                {
+                                    <td>
+                                        <a href="http://lekhacphuc-001-site1.ctempurl.com/user-content/@item.ThumbnailImage" target="_blank">
+                                            <img src="http://lekhacphuc-001-site1.ctempurl.com/user-content/@item.ThumbnailImage" width="50" height="50" />
+                                        </a>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td></td>
+                                }
+
+                                <td>@item.Name</td>
+                                <td>@String.Format("{0:C}", item.OriginalPrice)</td>
+                                <td>@String.Format("{0:C}", item.Price)</td>
+                                <td>@item.Stock</td>
+                                <td>
+                                    <form method="post" asp-action="Delete" asp-controller="Product" asp-route-id="@item.Id">
+                                        <input hidden name="id" value="@item.Id" />
+                                        <a href="/product/categoryassign/@item.Id" data-toggle="tooltip" title="Assign Category For Product"><i class="fa fa-list-alt"></i></a>
+                                        <a href="/product/edit/@item.Id" data-toggle="tooltip" title="Edit" style="padding-left:10px"><i class="fa fa-edit"></i></a>
+                                        <button type="submit" class="btn-link" data-toggle="tooltip" title="Delete" onclick="return confirm('Do you delete ?')"><i class="fa fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            count++;
+                        }
+                        @if (Model.Items.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center">Sorry , No data avaliable</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @await Component.InvokeAsync("Pager", Model)
+        </div>
+    </div>
+</section>

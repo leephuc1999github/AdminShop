@@ -1,0 +1,138 @@
+﻿@using view_model.Utilities.Menus;
+@model List<MenuItemVm>
+
+@{
+    ViewData["Title"] = "Menu";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section Scripts{
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var menuItemsAdmin = @Html.Raw(ViewBag.MenuItemsAdmin)
+            var menuItemsSell = @Html.Raw(ViewBag.MenuItemsSell)
+            $("#jstree_menu_div_admin").jstree({
+                'core': {
+                    'data': menuItemsAdmin
+                },
+                'contextmenu': {
+                    'items': customMenu
+                },
+                'plugins': ['contextmenu'],
+            }).bind("loaded.jstree", function (event, data) {
+                $(this).jstree("open_all");
+                $(this).jstree();
+            });
+
+            $("#jstree_menu_div_sell").jstree({
+                'core': {
+                    'data': menuItemsSell
+                },
+                'contextmenu': {
+                    'items': customMenu
+                },
+                'plugins': ['contextmenu'],
+            }).bind("loaded.jstree", function (event, data) {
+                $(this).jstree("open_all");
+            });
+
+
+
+            function customMenu(node) {
+                var items = {
+                    addItem: {
+                        label: "Add SubItem",
+                        action: function () {
+                            
+                        }
+                    },
+                    renameItem: {
+                        label: "Rename",
+                        action: function () {
+                            
+                        }
+                    },
+                    deleteItem: {
+                        label: "Delete",
+                        action: function () {
+
+                        }
+                    }
+                 };
+
+                if ($(node).hasClass("folder")) {
+                    delete items.deleteItem;
+                }
+
+                return items;
+            }
+        })
+
+    </script>
+}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Menu</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item">Menu</li>
+                    <li class="breadcrumb-item active">Configuration</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Admin</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" style="display: block;">
+                        <div id="jstree_menu_div_admin"></div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="text-danger float-right"><i>(Select And Click Right Mouse A Node To Action)</i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-info">
+                    <div class="card-header">
+                        <h3 class="card-title">Sell</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="jstree_menu_div_sell"></div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="text-danger float-right"><i>(Select And Click Right Mouse A Node To Action)</i></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
