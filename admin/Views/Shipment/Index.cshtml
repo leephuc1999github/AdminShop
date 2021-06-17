@@ -9,15 +9,43 @@
 @{ 
     int count = 1;
     List<StatusShipmentViewModel> status = ViewBag.StatusShipment;
+    
 }
 @section Scripts{
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/javascript">
-        $(function () {
+        $(document).ready(function () {
             var mesgSuccess = "@Html.Raw(TempData["Success"])";
             var mesgFailure = "@Html.Raw(TempData["Failure"])";
             if (mesgSuccess != "") toastr.success(mesgSuccess);
             if (mesgFailure != "") toastr.error(mesgFailure);
-        });
+            $("[name=status]").change(function () {
+                var id = $(this).attr("data-id");
+                var val = $(this).find(":selected").attr("data-name").toLowerCase();
+                $(`#${id}`).attr("data-value", val);
+            });
+            $("[name=updateStatus]").click(function () {
+                var id = $(this).attr("id");
+                var val = $(this).attr("data-value");
+                var checker = confirm(`Do you want to ${val} this shipment ?`);
+                if (checker) {
+                    switch (val) {
+                        case "approved":
+                            $(this).attr("data-target", "#modal-update-approved");
+                            $("#modal-update-approved").find("form").attr("action", `shipment/update/${id}`);
+                            break;
+                        case "delivering":
+                            $(this).attr("data-target", "#modal-update-delivering");
+                            $("#modal-update-delivering").find("form").attr("action", `shipment/update/${id}`);
+                            break;
+                        case "complete":
+                            $(this).attr("data-target", "#modal-update-completed");
+                            $("#modal-update-completed").find("form").attr("action", `shipment/update/${id}`);
+                            break;
+                    }
+                }
+            })
+        })
     </script>
 }
 <div class="content-header">
@@ -75,15 +103,31 @@
                             <td>@item.NoteOrder</td>
                             <td>@item.PaymentFormat</td>
                             <td>
-                                <select class="form-control" name="status">
-                                @for (var i = 0; i < status.Count; i++)
-                                {
-                                    <option selected="@(item.Status.ToLower().Equals(status[i].Name.ToLower())?true:false)" value="@status[i].Value">@status[i].Name</option>
-                                }
+                                <select class="form-control" name="status" data-id="@item.Id">
+                                    @{
+                                        int valueStatus = status.Where(s => s.Name.ToLower().Equals(item.Status.ToLower())).FirstOrDefault().Value;
+                                        for (int i = 0; i < status.Count; i++)
+                                        {
+                                            if (i < valueStatus)
+                                            {
+                                                <option disabled data-name="@status[i].Name.ToLower()" value="@status[i].Value">@status[i].Name</option>
+                                            }
+                                            else if (i == valueStatus)
+                                            {
+                                                <option selected data-name="@status[i].Name.ToLower()" value="@status[i].Value">@status[i].Name</option>
+                                            }else{
+                                                <option data-name="@status[i].Name.ToLower()" value="@status[i].Value">@status[i].Name</option>
+                                            }
+                                        }
+                                    }
                                 </select>
                             </td>
                             <td>@item.NoteShipping</td>
-                            <td><a href="#" data-toggle="tooltip" title="Update"><i class="fa fa-edit"></i></a></td>
+                            <td>
+                                <button type="submit" class="btn-link" id="@item.Id" data-value="@item.Status.ToLower()" data-toggle="modal" data-target="#" name="updateStatus">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                            </td>
                         </tr>
                             count++;
                         }
@@ -101,3 +145,78 @@
     </div>
 </section>
 
+<div class="modal fade" id="modal-update-approved" aria-hidden="true" style="display: none;">
+    <form method="post" action="">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Update Shipment</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="moneyShipping">
+                        <label>Money Shipping</label>
+                        <input name="moneyShipping" type="number" value="" placeholder="Money Ship ..." class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <input hidden name="status" value="1" />
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal fade" id="modal-update-delivering" aria-hidden="true" style="display: none;">
+    <form method="post" action="">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Update Shipment</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>To Delivering</p>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+                    <input hidden name="status" value="2" />
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal fade" id="modal-update-completed" aria-hidden="true" style="display: none;">
+    <form method="post" action="">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Update Shipment</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="NoteShipping">
+                        <label>Note Shipping</label>
+                        <input name="NoteShipping" value="" placeholder="Note Shipping" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <input hidden name="status" value="3" />
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

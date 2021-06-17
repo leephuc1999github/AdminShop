@@ -18,15 +18,7 @@ namespace admin_webapp.Controllers.Components
         }
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var menuItems = await _menuApiClient.GetAll();
-            return View("Default", menuItems.Where(mi => mi.Type.Equals("admin")).Select(item => new MenuItemViewModel()
-            {
-                id = item.Id.ToString(),
-                text = item.Text,
-                parent = item.ParentId.ToString(),
-                type = item.Type,
-                url = item.Url
-            }).ToList());
+            return View("Default");
         }
     }
 }

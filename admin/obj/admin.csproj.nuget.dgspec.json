@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\MYPROJECT\\admin_webapp\\admin\\admin.csproj": {}
+    "E:\\MYPROJECT\\ASP.NETCoreApp\\admin_webapp\\admin\\admin.csproj": {}
   },
   "projects": {
-    "E:\\MYPROJECT\\admin_webapp\\admin\\admin.csproj": {
+    "E:\\MYPROJECT\\ASP.NETCoreApp\\admin_webapp\\admin\\admin.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\MYPROJECT\\admin_webapp\\admin\\admin.csproj",
+        "projectUniqueName": "E:\\MYPROJECT\\ASP.NETCoreApp\\admin_webapp\\admin\\admin.csproj",
         "projectName": "admin",
-        "projectPath": "E:\\MYPROJECT\\admin_webapp\\admin\\admin.csproj",
+        "projectPath": "E:\\MYPROJECT\\ASP.NETCoreApp\\admin_webapp\\admin\\admin.csproj",
         "packagesPath": "C:\\Users\\phucl\\.nuget\\packages\\",
-        "outputPath": "E:\\MYPROJECT\\admin_webapp\\admin\\obj\\",
+        "outputPath": "E:\\MYPROJECT\\ASP.NETCoreApp\\admin_webapp\\admin\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\phucl\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -63,6 +63,10 @@
             "Microsoft.IdentityModel.Tokens": {
               "target": "Package",
               "version": "[6.11.1, )"
+            },
+            "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
+              "target": "Package",
+              "version": "[3.1.5, )"
             },
             "Newtonsoft.Json": {
               "target": "Package",

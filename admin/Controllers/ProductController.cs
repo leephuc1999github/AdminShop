@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using view_model.Catalog.Categories;
 using view_model.Catalog.Products;
@@ -24,17 +26,23 @@ namespace admin_webapp.Controllers
         #region all product
         public async Task<IActionResult> Index(string keyword, int pageIndex = 1, int pageSize = 10, int? categoryId = null)
         {
-            var languageId = HttpContext.Session.GetString("DefaultLanguageId");
             var request = new GetManageProductPagingRequest()
             {
                 Keyword = keyword,
                 PageIndex = pageIndex,
                 PageSize = pageSize,
-                CategoryId = categoryId,
-                LanguageId = languageId
+                CategoryId = categoryId
             };
             var data = await _productApiClient.GetPagings(request);
-            var categories = await _categoryApiClient.GetAll(languageId);
+            if (keyword != null )
+            {
+                data = data.Where(p => p.Name.ToLower().Contains(keyword.ToLower())).ToList();
+            }
+            if(categoryId != null)
+            {
+                data = data.Where(p => p.ProductGroup.Catalog.Id == categoryId).ToList();
+            }
+            var categories = await _categoryApiClient.GetAll();
             List<SelectListItem> optionsCategory = new List<SelectListItem>();
             foreach(var category in categories)
             {
@@ -48,7 +56,28 @@ namespace admin_webapp.Controllers
             ViewData["OptionsCategory"] = optionsCategory;
             ViewBag.categoryId = categoryId;
             ViewBag.keyword = keyword;
-            return View(data);
+            var result = new PagedResult<ProductResponse>()
+            {
+                Items = data,
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                TotalRecords = data.Count
+            };
+            return View(result);
+        }
+        [HttpGet]
+        public async Task<IActionResult> Detail(int id  , int pageIndex)
+        {
+            var result = await _productApiClient.GetById(id);
+            var items = new PagedResult<Item>()
+            {
+                Items = result.Items.Skip((pageIndex - 1) * 3).Take(3).ToList(),
+                PageIndex = pageIndex,
+                PageSize = 2,
+                TotalRecords = result.Items.Count
+            };
+            ViewBag.Items = items;
+            return View(result);
         }
         #endregion
 
@@ -56,135 +85,178 @@ namespace admin_webapp.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
+            
+            var productGroups = await _productApiClient.GetAllProductGroup();
+            List<SelectListItem> optionsProductGroups = new List<SelectListItem>();
+            foreach (var pg in productGroups)
+            {
+                SelectListItem option = new SelectListItem()
+                {
+                    Text = pg.Name + " - " + pg.Catalog.Name,
+                    Value = pg.Id + "-" + pg.Catalog.Id
+                };
+                optionsProductGroups.Add(option);
+            }
+            ViewData["OptionsProductGroup"] = optionsProductGroups;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(ProductCreateRequest request)
+        public async Task<IActionResult> Create(string productGroup, CreateProductRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return View();
             }
-            var result = await _productApiClient.CreateProduct(request);
-            if (result.IsSuccessed)
+            if(productGroup != null)
             {
-                TempData["Success"] = "Insert Success";
-                return RedirectToAction("","product");
+                string[] par = productGroup.Split("-");
+                int Id = Convert.ToInt32(par[0]);
+                var result = await _productApiClient.CreateProduct(Id, request);
+                if (result)
+                {
+                    TempData["Success"] = "Insert Success";
+                    return RedirectToAction("", "product");
+                }
             }
-            TempData["Failure"] = result.Message;
+            TempData["Failure"] = "Let 's Choose Product Group";
             return View(request);
         }
         #endregion
 
-        #region edit product
-        [HttpGet]
-        public async Task<IActionResult> Edit(int id)
-        {
-            var languageId = HttpContext.Session.GetString("DefaultLanguageId");
-            var result = await _productApiClient.GetById(id, languageId);
-            if (!result.IsSuccessed)
-            {
-                TempData["Failure"] = "Product Not Found";
-                return RedirectToAction("", "product");
-            }
-            var updateRequest = new ProductUpdateRequest()
-            {
-                Name = result.ResultObj.Name,
-                Description = result.ResultObj.Description,
-                Details = result.ResultObj.Details,
-                LanguageId = languageId,
-                SeoAlias = result.ResultObj.SeoAlias,
-                SeoDescription = result.ResultObj.SeoDescription,
-                SeoTitle = result.ResultObj.SeoTitle,
-                Id = id
-            };
-            return View(updateRequest);
-        }
-
         [HttpPost]
-        [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Edit([FromForm] ProductUpdateRequest request)
+        public async Task<IActionResult> Update(int Id , int ProductGroup, UpdateProductRequest request)
         {
             if (!ModelState.IsValid)
                 return View(request);
-
-            var result = await _productApiClient.UpdateProduct(request);
-            if (result.IsSuccessed)
+            request.active = true;
+            var result = await _productApiClient.UpdateProduct(Id , ProductGroup ,request);
+            if (result != null)
             {
                 TempData["Success"] = "Update Success";
-                return RedirectToAction("","product");
+                return RedirectToAction("detail","product",new { id =  Id});
             }
-            TempData["Failure"] = result.Message;
-            ModelState.AddModelError("", "Cập nhật sản phẩm thất bại");
-            return RedirectToAction("","product");
-        }
-        #endregion
-
-        #region delete product
-        [HttpPost]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var result = await _productApiClient.DeleteProduct(id);
-            if (result.IsSuccessed)
-            {
-                TempData["Success"] = "Delete Success";
-                return RedirectToAction("","product");
-            }
-            TempData["Failure"] = result.Message;
-            return RedirectToAction("","product");
-        }
-        #endregion
-
-        #region assign category
-        [HttpGet]
-        public async Task<IActionResult> CategoryAssign(int id)
-        {
-            var categories = await GetCategoryAssignRequest(id);
-            if(categories == null)
-            {
-                TempData["Failure"] = "Product Not Found";
-                return RedirectToAction("", "product");
-            }
-            return View(categories);
+            TempData["Failure"] = "Update fail";
+            return RedirectToAction("", "product");
         }
 
         [HttpPost]
-        public async Task<IActionResult> CategoryAssign(CategoryAssignRequest request)
+        public async Task<IActionResult> Hide(int Id , int ProductGroup , UpdateProductRequest request)
         {
-            if (!ModelState.IsValid)
-                return View();
-
-            var result = await _productApiClient.CategoryAssign(request.Id, request);
-
-            if (result.IsSuccessed)
+            var product = await _productApiClient.GetById(Id);
+            request.name = product.Name;
+            request.price = product.Price;
+            request.unit = product.Unit;
+            request.warranty = product.Warranty;
+            request.description = product.Description;
+            if (product.Active)
             {
-                TempData["Success"] = "Update Success";
+                request.active = false;
+            }
+            else
+            {
+                request.active = true;
+            }
+            var result = await _productApiClient.UpdateProduct(Id ,ProductGroup,request);
+            if (result != null)
+            {
+                TempData["Success"] = "Hide Success";
                 return RedirectToAction("","product");
             }
-            TempData["Failure"] = result.Message;
-            ModelState.AddModelError("", result.Message);
-            var roleAssignRequest = await GetCategoryAssignRequest(request.Id);
-
-            return View(roleAssignRequest);
+            TempData["Failure"] = "Hide Fail";
+            return RedirectToAction("","product");
         }
-        #endregion
 
-        private async Task<CategoryAssignRequest> GetCategoryAssignRequest(int id)
+        [HttpPost]
+        public async Task<IActionResult> AddItem(int Id , AddItemRequest request)
         {
-            var languageId = HttpContext.Session.GetString("DefaultLanguageId");
-            var product = await _productApiClient.GetById(id , languageId);
-            if (!product.IsSuccessed)
+            var result = await _productApiClient.AddItemIntoProduct(Id , request);
+            if (result)
             {
-                return null;
+                TempData["Success"] = "Add Success";
+                return RedirectToAction("detail", "product", new { id = Id });
             }
-            var categories = await _categoryApiClient.GetAll(languageId);
-            var result = new CategoryAssignRequest();
-            foreach (var item in categories)
+            TempData["Failure"] = "Add Fail";
+            return RedirectToAction("", "product");
+        }
+        [HttpPost]
+        public async Task<IActionResult> UpdateItem(int Id , int ProductId , float SalePrice , float SellPrice , UpdateItemRequest request)
+        {
+            try
             {
-                result.Categories.Add(new SelectItem() { Id = item.Id + "" , Name = item.Name , Selected = product.ResultObj.Categories.Contains(item.Name) });
+                var item = await _productApiClient.GetItemById(Id);
+                request.active = true;
+                request.color = item.Color;
+                request.name = item.Name;
+                request.quantity = item.Quantity;
+                request.salePrice = SalePrice;
+                request.sellPrice = SellPrice;
+                request.size = item.Size;
+                
+                var result = await _productApiClient.UpdateItemIntoProduct(Id, ProductId, request);
+                TempData["Success"] = "Update Success";
+                return RedirectToAction("detail", "product", new { id = ProductId });
             }
-            return result;
+            catch(Exception e)
+            {
+                TempData["Failure"] = "Update Fail";
+                return RedirectToAction("","error");
+            }
+        }
+        [HttpPost]
+        public async Task<IActionResult> InsertImage(int productid , int id , string url)
+        {
+            var result = await _productApiClient.InsertImageUrl(id, url);
+            if (result)
+            {
+                TempData["Success"] = "Insert Success";
+            }
+            else
+            {
+                TempData["Failure"] = "Insert Failure";
+            }
+            return RedirectToAction("detail", "product" , new { id = productid});
         }
     }
+}
+public class UpdateProductRequest
+{
+    public string name { get; set; }
+    public string description { get; set; }
+    public float price { get; set; }
+    public string unit { get; set; }
+    public string warranty { get; set; }
+    public bool active { get; set; }
+
+}
+public class AddItemRequest
+{
+    public string name { get; set; }
+    public string color { get; set; }
+    public string size { get; set; }
+    public float sellPrice { get; set; }
+    public float salePrice { get; set; }
+    public bool active { get; set; }
+    public int quantity { get; set; }
+
+
+}
+public class UpdateItemRequest
+{
+    public string name { get; set; }
+    public string color { get; set; }
+    public string size { get; set; }
+    public float sellPrice { get; set; }
+    public float salePrice { get; set; }
+    public bool active { get; set; }
+    public int quantity { get; set; }
+}
+public class CreateProductRequest
+{
+    public string name { get; set; }
+    public string description { get; set; }
+    public float price { get; set; }
+    public string unit { get; set; }
+    public string warranty { get; set; }
+    public bool active { get; set; }
 }

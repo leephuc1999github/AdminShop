@@ -27,16 +27,24 @@ namespace admin_webapp.Controllers
 
         public async Task<IActionResult> Index(string keyword,int pageIndex=1,int pageSize = 10)
         {
-            var sessions = HttpContext.Session.GetString("Token");
-            var request = new GetUserPagingRequest()
+            try
             {
-                BearerToken = sessions,
-                Keyword = keyword,
-                PageIndex = pageIndex,
-                PageSize = pageSize
-            };
-            var data =await _userApiClient.GetUsersPaging(request);
-            return View(data);
+                var sessions = HttpContext.Session.GetString("Token");
+                var request = new GetUserPagingRequest()
+                {
+                    BearerToken = sessions,
+                    Keyword = keyword,
+                    PageIndex = pageIndex,
+                    PageSize = pageSize
+                };
+                var data = await _userApiClient.GetUsersPaging(request);
+                return View(data);
+            }
+            catch(Exception e)
+            {
+                return RedirectToAction("", "error");
+            }
+            
         }
 
 

@@ -1,6 +1,5 @@
 ﻿@using view_model.Common;
-@using view_model.Catalog.Products;
-@model PagedResult<ProductVm>
+@model PagedResult<ProductResponse>
 @{
     var count = 1;
 }
@@ -61,11 +60,10 @@
                     <thead>
                         <tr>
                             <th style="width: 10px">#</th>
-                            <th>Image</th>
+                            <th>Status</th>
                             <th>Name</th>
-                            <th>Pucharse Price (Dolar)</th>
-                            <th>Price (Dolar)</th>
-                            <th>Stock</th>
+                            <th>Price (Dong)</th>
+                            <th>Description</th>
                             <th></th>
 
                         </tr>
@@ -75,29 +73,16 @@
                         {
                             <tr>
                                 <td><strong>@count</strong></td>
-                                @if (item.ThumbnailImage != null)
-                                {
-                                    <td>
-                                        <a href="http://lekhacphuc-001-site1.ctempurl.com/user-content/@item.ThumbnailImage" target="_blank">
-                                            <img src="http://lekhacphuc-001-site1.ctempurl.com/user-content/@item.ThumbnailImage" width="50" height="50" />
-                                        </a>
-                                    </td>
-                                }
-                                else
-                                {
-                                    <td></td>
-                                }
-
+                                <td>@(item.Active==true?"Active" : "Hide")</td>
                                 <td>@item.Name</td>
-                                <td>@String.Format("{0:C}", item.OriginalPrice)</td>
-                                <td>@String.Format("{0:C}", item.Price)</td>
-                                <td>@item.Stock</td>
+                                <td>@item.Price</td>
+                                <td>@item.Description</td>
                                 <td>
-                                    <form method="post" asp-action="Delete" asp-controller="Product" asp-route-id="@item.Id">
-                                        <input hidden name="id" value="@item.Id" />
-                                        <a href="/product/categoryassign/@item.Id" data-toggle="tooltip" title="Assign Category For Product"><i class="fa fa-list-alt"></i></a>
-                                        <a href="/product/edit/@item.Id" data-toggle="tooltip" title="Edit" style="padding-left:10px"><i class="fa fa-edit"></i></a>
-                                        <button type="submit" class="btn-link" data-toggle="tooltip" title="Delete" onclick="return confirm('Do you delete ?')"><i class="fa fa-trash"></i></button>
+                                    <form method="post" asp-controller="product" asp-action="hide">
+                                        <a href="/product/detail/@item.Id" data-toggle="tooltip" title="Detail"><i class="fas fa-eye"></i></a>
+                                        <input hidden name="Id" value="@item.Id" />
+                                        <input hidden name="ProductGroup" value="@item.ProductGroup.Id" />
+                                        <button type="submit" class="btn-link"><i class="fas fa-trash" data-toggle="tooltip" title="Hide Product"></i></button>
                                     </form>
                                 </td>
                             </tr>
@@ -106,7 +91,7 @@
                         @if (Model.Items.Count == 0)
                         {
                             <tr>
-                                <td colspan="6" class="text-center">Sorry , No data avaliable</td>
+                                <td colspan="5" class="text-center">Sorry , No data avaliable</td>
                             </tr>
                         }
                     </tbody>

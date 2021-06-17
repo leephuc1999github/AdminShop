@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using view_model.Catalog.Shipments;
 using view_model.Common;
@@ -33,6 +34,21 @@ namespace admin_webapp.Services
             var body = await response.Content.ReadAsStringAsync();
             var shipments = JsonConvert.DeserializeObject<ApiResult<PagedResult<ShipmentVm>>>(body);
             return shipments;
+        }
+
+        public async Task<ApiResult<bool>> Update(int id,int status, string NoteShipping, float moneyShipping)
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(_configuration["DomainString"]);
+
+            var httpContent = new StringContent("", Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync($"api/Shipments/UpdateStatus/{id}?status={status}&moneyShipping={moneyShipping}&NoteShipping={NoteShipping}", httpContent);
+            var result = await response.Content.ReadAsStringAsync();
+            if (response.IsSuccessStatusCode)
+                return JsonConvert.DeserializeObject<ApiSuccessResult<bool>>(result);
+
+            return JsonConvert.DeserializeObject<ApiErrorResult<bool>>(result);
         }
     }
 }

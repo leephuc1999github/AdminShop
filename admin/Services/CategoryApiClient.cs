@@ -20,16 +20,24 @@ namespace admin_webapp.Services
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
         }
-        public async Task<List<CategoryVm>> GetAll(string languageId)
+        public async Task<List<CatalogResponse>> GetAll()
         {
             var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(_configuration["DomainString"]);
-            var response = await client.GetAsync($"/api/categories?languageId={languageId}");
+            client.BaseAddress = new Uri(_configuration["DomainStringMe"]);
+            var response = await client.GetAsync($"api/catalogs?fbclid=IwAR2v5mBn1Iz-ScB-d1YoQnmzK9nQ06azk-gm2uqxCm2jWLcdvLjJchwKdbA");
             var body = await response.Content.ReadAsStringAsync();
             if (response.IsSuccessStatusCode)
-                return JsonConvert.DeserializeObject<List<CategoryVm>>(body);
+                return JsonConvert.DeserializeObject<List<CatalogResponse>>(body);
 
-            return JsonConvert.DeserializeObject<List<CategoryVm>>(body);
+            return JsonConvert.DeserializeObject<List<CatalogResponse>>(body);
         }
     }
+}
+
+public class CatalogResponse
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string CreatedAt { get; set; }
+    public string UpdatedAt { get; set; }
 }

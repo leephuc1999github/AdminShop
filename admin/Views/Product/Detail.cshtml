@@ -1,0 +1,308 @@
+﻿@using view_model.Common;
+@model ProductResponse
+@{
+    ViewData["Title"] = "Detail";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var items = ViewBag.Items as PagedResult<Item>;
+}
+@section Scripts{
+    <script type="text/javascript">
+        $(function () {
+            var mesgSuccess = "@Html.Raw(TempData["Success"])";
+            var mesgFailure = "@Html.Raw(TempData["Failure"])";
+            if (mesgSuccess != "") toastr.success(mesgSuccess);
+            if (mesgFailure != "") toastr.error(mesgFailure);
+            $("[name=insert]").click(function () {
+                $("#id-item").attr("value", $(this).attr("data-id")); 
+               
+            })
+            $("[name=update]").click(function () {
+                $("#idItem").attr("value", $(this).attr("data-id"));
+            })
+        });
+    </script>
+}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Product</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item">Product</li>
+                    <li class="breadcrumb-item active">Detail</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="row">
+                <div class="col-12">
+                    <div class="product p-3 mb-3">
+                        <div class="row">
+                            <div class="col-12">
+                                <h4>
+                                    <i class="fab fa-product-hunt"></i> @Model.Name
+                                </h4>
+                            </div>
+                        </div>
+                        <div class="row product-info">
+                            <div class="col-sm-4 product-col">
+                                <b>Product Information</b><br>
+                                <br>
+                                <b>Product Group :</b> @Model.ProductGroup.Name<br>
+                                <b>Category Name:</b> @Model.ProductGroup.Catalog.Name<br>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <form method="post" asp-controller="product" asp-action="update">
+                                    <div class="card card-primary">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Product</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <input hidden name="Id" value="@Model.Id" />
+                                            <input hidden name="ProductGroup" value="@Model.ProductGroup.Id" />
+                                            <div class="row p-1">
+                                                <div class="col-lg-12">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Name</span>
+                                                        </div>
+                                                        <input type="text" class="form-control" name="Name" value="@Model.Name">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row p-1">
+                                                <div class="col-lg-12">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Price (Dong)</span>
+                                                        </div>
+                                                        <input type="number" class="form-control" name="Price" value="@Model.Price">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row p-1">
+                                                <div class="col-lg-12">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Unit</span>
+                                                        </div>
+                                                        <input type="text" class="form-control" name="Unit" value="@Model.Unit">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row p-1">
+                                                <div class="col-lg-12">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Warranty</span>
+                                                        </div>
+                                                        <input type="text" class="form-control" name="Warranty" value="@Model.Warranty">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row p-1">
+                                                <div class="col-lg-12" style="padding-top:10px">
+                                                    <div class="col-lg-12">
+                                                        <label for="Description">Description</label>
+                                                        <textarea type="text" class="form-control" name="Description" rows="4">@Model.Description</textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer">
+                                            <button type="submit" class="btn btn-primary float-right">Submit</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-sm-8">
+                                <div class="card card-primary">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Items</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <a class="btn btn-success m-2" data-toggle="modal" data-target="#add-item">Create New Item</a>
+                                        <div class="col-12 table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Image</th>
+                                                        <th>Name</th>
+                                                        <th>Color</th>
+                                                        <th>Size</th>
+                                                        <th>Sell Price</th>
+                                                        <th>Sale Price</th>
+                                                        <th>Quantity</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var item in items.Items)
+                                                    {
+                                                        <tr>
+                                                            <td>@item.Id</td>
+                                                            <td><img src="@(item.ItemImages.Count==0 ? "" : item.ItemImages[0].Url)" width="50" height="70"/></td>
+                                                            <td>@item.Name</td>
+                                                            <td>@item.Color</td>
+                                                            <td>@item.Size</td>
+                                                            <td>@item.SellPrice</td>
+                                                            <td>@item.SalePrice</td>
+                                                            <td>@item.Quantity</td>
+                                                            <td>
+                                                                <button class="btn-link" type="submit" data-id="@item.Id" name="insert" data-toggle="modal" data-target="#add-image">
+                                                                    <i class="fas fa-images" data-toggle="tooltip" title="Insert Image"></i>
+                                                                </button>
+                                                                <button type="submit" data-id="@item.Id" name="update" class="btn-link" data-toggle="modal" data-target="#update-item">
+                                                                    <i class="fas fa-edit" data-toggle="tooltip" title="Update Item"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                    @if (Model.Items.Count == 0)
+                                                    {
+                                                        <tr>
+                                                            <td colspan="8" class="text-center">Sorry , No data avaliable</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    @await Component.InvokeAsync("Pager", items)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row no-print">
+                            <div class="col-12">
+                                <form method="get" asp-controller="product" asp-action="">
+                                    <button type="submit" class="btn btn-secondary" style="margin-right: 5px;">
+                                        Back To List
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="add-item" aria-hidden="true" style="display: none;">
+    <form method="post" asp-controller="product" asp-action="additem">
+        <input hidden name="Id" value="@Model.Id"/>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Item</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input name="Active" value="true" hidden />
+                    <div>
+                        <label>Name</label>
+                        <input name="Name" value="" placeholder="Name ..." class="form-control" />
+                    </div>
+                    <div>
+                        <label>Color</label>
+                        <input name="Color" value="" placeholder="Color ..." class="form-control" />
+                    </div>
+                    <div>
+                        <label>Size</label>
+                        <input name="Size" value="" placeholder="Size ..." class="form-control" />
+                    </div>
+                    <div>
+                        <label>SellPrice</label>
+                        <input name="SellPrice" value="" type="number" placeholder="SellPrice ..." class="form-control" />
+                    </div>
+                    <div>
+                        <label>SalePrice</label>
+                        <input name="SalePrice" value="" type="number" placeholder="SalePrice ..." class="form-control" />
+                    </div>
+                    <div>
+                        <label>Quantity</label>
+                        <input name="Quantity" value="" type="number" placeholder="Quantity ..." class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal fade" id="add-image" aria-hidden="true" style="display: none;">
+    <form method="post" asp-controller="product" asp-action="insertimage">
+        <input hidden name="productid" value="@Model.Id" />
+        <input hidden name="id" id="id-item" value=""/>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Image</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <label>Url Image</label>
+                        <input name="url" value="" placeholder="" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal fade" id="update-item" aria-hidden="true" style="display: none;">
+    <form method="post" asp-controller="product" asp-action="updateitem">
+        <input hidden name="Id" id="idItem" value="" />
+        <input hidden name="ProductId" value="@Model.Id" />
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Update Item</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <label>SellPrice</label>
+                        <input name="SellPrice" value="" min="10000" type="number" placeholder="" class="form-control" />
+                    </div>
+                    <div>
+                        <label>SalePrice</label>
+                        <input name="SalePrice" value="" min="10000" type="number" placeholder="" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

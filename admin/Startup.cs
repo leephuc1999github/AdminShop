@@ -1,4 +1,5 @@
 using admin.Models;
+using admin.Services;
 using admin_webapp.Services;
 using FluentValidation.AspNetCore;
 using library.Data;
@@ -66,6 +67,7 @@ namespace admin
             services.AddTransient<ILanguageApiClient, LanguageApiClient>();
             services.AddTransient<IMenuApiClient, MenuApiClient>();
             services.AddTransient<IShipmentApiClient, ShipmentApiClient>();
+            services.AddTransient<IOrderApiClient, OrderApiClient>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

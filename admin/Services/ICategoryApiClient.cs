@@ -6,6 +6,6 @@ namespace admin_webapp.Services
 {
     public interface ICategoryApiClient
     {
-        Task<List<CategoryVm>> GetAll(string languageId);
+        Task<List<CatalogResponse>> GetAll();
     }
 }

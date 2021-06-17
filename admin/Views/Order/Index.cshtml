@@ -1,0 +1,130 @@
+﻿@using view_model.Common;
+@using admin.Models;
+@{
+    ViewData["Title"] = "Order";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@model PagedResult<OrderResponse>
+@{
+    int count = 1;
+}
+@section Scripts{
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var mesgSuccess = "@Html.Raw(TempData["Success"])";
+            var mesgFailure = "@Html.Raw(TempData["Failure"])";
+            if (mesgSuccess != "") toastr.success(mesgSuccess);
+            if (mesgFailure != "") toastr.error(mesgFailure);
+            $("[name=statusOrder]").change(function () {
+                var orderId = $(this).attr("data-id");
+                $(`#order-${orderId}`).attr("value", $(this).val());
+                $(`#note-${orderId}`).attr("value", $(this).val());
+            })
+        })
+    </script>
+}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Orders</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item">Orders</li>
+                    <li class="breadcrumb-item active">List</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-tools">
+                    <i style="color:red">Choose status order and click button to update status</i>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="width: 10px">#</th>
+                            <th>Code</th>
+                            <th>Customer</th>
+                            <th>Payment</th>
+                            <th>Note</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            if (item.RecipientPhoneNumber != null)
+                            {
+                                <tr>
+                                    <td><strong>@count</strong></td>
+                                    <td>@item.Id</td>
+
+                                    <td>
+                                        <strong><a href="javascript:void(0)" style="font-size:20px">@item.RecipientPhoneNumber</a></strong> - @item.RecipientName <br>
+                                        <small>@item.DetailedAddress , @item.Ward - @item.District - @item.City - @item.Country</small>
+                                    </td>
+                                    <td>
+                                        Method : @item.Payment.PaymentMethod <br>
+                                        Paid : @item.Payment.Paid <br>
+                                        Total : @item.Payment.TotalPayment (dong) <br>
+                                        PrePayment : @item.Payment.PrePayment (dong)
+                                    </td>
+
+                                    <td>@item.Note</td>
+                                    <td>
+                                        <select class="form-control" name="statusOrder" data-id="@item.Id">
+                                            @{ 
+                                                foreach(var statusorder in ViewBag.StatusOrder as List<StatusOrderViewModel>)
+                                                {
+                                                    if (statusorder.Value.Equals(item.Status))
+                                                    {
+                                                        <option value="@statusorder.Value" selected>@statusorder.Name</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@statusorder.Value">@statusorder.Name</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <form method="post" asp-action="updatestatus" asp-controller="order">
+                                            <a href="/order/detail/@item.Id" data-toggle="tooltip" title="Detail"><i class="fas fa-eye"></i></a>
+                                            <input hidden id="order-@item.Id" value="@item.Status" name="status" />
+                                            <input hidden name="note" id="note-@item.Id" value="@item.Status" />
+                                            <input hidden name="id" value="@item.Id" />
+                                            <button type="submit" class="btn-link" data-toggle="tooltip" title="Update Status" name="updateStatus">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                        </form>
+                                        
+                                    </td>
+                                </tr>
+                                count++;
+                            }
+
+                        }
+                        @if (Model.Items.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center">Sorry , No data avaliable</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @await Component.InvokeAsync("Pager", Model)
+        </div>
+    </div>
+</section>

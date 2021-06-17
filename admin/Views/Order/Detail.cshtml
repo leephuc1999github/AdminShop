@@ -1,0 +1,106 @@
+﻿@model OrderResponse;
+@{
+    ViewData["Title"] = "Detail Order";
+    string status = "";
+    switch (Model.Status)
+    {
+        case "ToPay":
+            status = "Chờ xác nhận";
+            break;
+        case "ToShip":
+            status = "Chờ lấy hàng";
+            break;
+        case "ToReceive":
+            status = "Đang giao";
+            break;
+        case "Completed":
+            status = "Đã giao";
+            break;
+        case "Cancelled":
+            status = "Đã hủy";
+            break;
+        default :
+            status = "Trả hàng";
+            break;
+    }
+}
+
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Orders</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item">Orders</li>
+                    <li class="breadcrumb-item active">Detail</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                <div class="row product-info">
+                    <div class="col-sm-4 product-col">
+                        <b>Order Information</b><br>
+                        <br>
+                        <b>Name :</b> @Model.RecipientName<br>
+                        <b>Phone Number :</b> @Model.RecipientPhoneNumber <br>
+                        <b>Address:</b> @Model.DetailedAddress , @Model.Ward - @Model.District - @Model.City - @Model.Country<br>
+                    </div> 
+                    <div class="col-sm-8 product-col">
+                        <b>Status : @status</b>
+                    </div>
+                </div>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Color</th>
+                            <th>Size</th>
+                            <th>Sell Price</th>
+                            <th>Sale Price</th>
+                            <th>Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Cart.Cart_Items)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td><img src="@(item.Item.ItemImages.Count==0 ? "" : item.Item.ItemImages[0].Url)" width="50" height="70" /></td>
+                                <td>@item.Item.Name</td>
+                                <td>@item.Item.Color</td>
+                                <td>@item.Item.Size</td>
+                                <td>@item.Item.SellPrice</td>
+                                <td>@item.Item.SalePrice</td>
+                                <td>@item.Quantity</td>
+                            </tr>
+                        }
+                        @if (Model.Cart.Cart_Items.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center">Sorry , No data avaliable</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                <form method="get" asp-controller="order" asp-action="">
+                    <button type="submit" class="btn btn-secondary" style="margin-right: 5px;">
+                        Back To List
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+

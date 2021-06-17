@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -25,49 +26,21 @@ namespace admin_webapp.Services
             _configuration = configuration;
         }
 
-        public async Task<ApiResult<int>> CreateProduct(ProductCreateRequest request)
+        public async Task<bool> CreateProduct(int productGroup , CreateProductRequest request)
         {
-            var sessions = _httpContextAccessor.HttpContext.Session.GetString("Token");
-
-            var languageId = _httpContextAccessor.HttpContext.Session.GetString("DefaultLanguageId");
-
             var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(_configuration["DomainString"]);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", sessions);
+            client.BaseAddress = new Uri(_configuration["DomainStringMe"]);
+            var json = JsonConvert.SerializeObject(request);
+            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
 
-            
-            var requestContent = new MultipartFormDataContent();
+            var response = await client.PostAsync($"api/products?productGroupId={productGroup}", httpContent);
 
-            if (request.ThumbnailImage != null)
-            {
-                byte[] data;
-                using (var br = new BinaryReader(request.ThumbnailImage.OpenReadStream()))
-                {
-                    data = br.ReadBytes((int)request.ThumbnailImage.OpenReadStream().Length);
-                }
-                ByteArrayContent bytes = new ByteArrayContent(data);
-                requestContent.Add(bytes, "thumbnailImage", request.ThumbnailImage.FileName);
-            }
-
-            requestContent.Add(new StringContent(request.Price.ToString()), "price");
-            requestContent.Add(new StringContent(request.OriginalPrice.ToString()), "originalPrice");
-            requestContent.Add(new StringContent(request.Stock.ToString()), "stock");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.Name) ? "" : request.Name.ToString()), "name");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.Description) ? "" : request.Description.ToString()), "description");
-
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.Details) ? "" : request.Details.ToString()), "details");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.SeoDescription) ? "" : request.SeoDescription.ToString()), "seoDescription");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.SeoTitle) ? "" : request.SeoTitle.ToString()), "seoTitle");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.SeoAlias) ? "" : request.SeoAlias.ToString()), "seoAlias");
-            requestContent.Add(new StringContent(languageId), "languageId");
-
-            var response = await client.PostAsync($"/api/products/", requestContent);
-            var body = await response.Content.ReadAsStringAsync();
             if (response.IsSuccessStatusCode)
             {
-                return JsonConvert.DeserializeObject<ApiSuccessResult<int>>(body);
+                var body = await response.Content.ReadAsStringAsync();
+                return true;
             }
-            return JsonConvert.DeserializeObject<ApiErrorResult<int>>(body);
+            return false;
         }
 
         public async Task<ApiResult<bool>> DeleteProduct(int productId)
@@ -86,56 +59,45 @@ namespace admin_webapp.Services
 
         }
 
-        public async Task<ApiResult<ProductVm>> GetById(int productId , string languageId)
+        public async Task<ProductResponse> GetById(int id)
         {
             var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(_configuration["DomainString"]);
-            var response = await client.GetAsync($"api/products/{productId}/{languageId}");
+            client.BaseAddress = new Uri(_configuration["DomainStringMe"]);
+            var response = await client.GetAsync($"api/products/{id}?fbclid=IwAR2-The3oSc_-FC4RtTHsIxm9J9KmUcv3HLdy0rBxMcEQxE6t6skLor_18U");
             var body = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<ProductResponse>(body);
+        }
+
+        public async Task<List<ProductResponse>> GetPagings(GetManageProductPagingRequest request)
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(_configuration["DomainStringMe"]);
+            var response = await client.GetAsync("api/products");
+            
             if (response.IsSuccessStatusCode)
             {
-                var product = JsonConvert.DeserializeObject<ApiSuccessResult<ProductVm>>(body);
-                return product;
+                var body = await response.Content.ReadAsStringAsync();
+                var products = JsonConvert.DeserializeObject<List<ProductResponse>>(body);
+                return products;
             }
             return null;
         }
 
-        public async Task<PagedResult<ProductVm>> GetPagings(GetManageProductPagingRequest request)
+        public async Task<ProductResponse> UpdateProduct(int id , int productGroup ,UpdateProductRequest request)
         {
             var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(_configuration["DomainString"]);
-            var response = await client.GetAsync("api/products/paging?" + 
-                $"pageIndex={request.PageIndex}&pageSize={request.PageSize}&keyword={request.Keyword}&categoryId={request.CategoryId}&languageId={request.LanguageId}");
-            var body = await response.Content.ReadAsStringAsync();
-            var products = JsonConvert.DeserializeObject<PagedResult<ProductVm>>(body);
-            return products;
-        }
+            client.BaseAddress = new Uri(_configuration["DomainStringMe"]);
+            var json = JsonConvert.SerializeObject(request);
+            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
 
-        public async Task<ApiResult<bool>> UpdateProduct(ProductUpdateRequest request)
-        {
-            var sessions = _httpContextAccessor.HttpContext.Session.GetString("Token");
-            var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(_configuration["DomainString"]);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", sessions);
-            var requestContent = new MultipartFormDataContent();
-
-            requestContent.Add(new StringContent(request.Id.ToString()), "id");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.Name) ? "" : request.Name.ToString()), "name");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.Description) ? "" : request.Description.ToString()), "description");
-
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.Details) ? "" : request.Details.ToString()), "details");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.SeoDescription) ? "" : request.SeoDescription.ToString()), "seoDescription");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.SeoTitle) ? "" : request.SeoTitle.ToString()), "seoTitle");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.SeoAlias) ? "" : request.SeoAlias.ToString()), "seoAlias");
-            requestContent.Add(new StringContent(string.IsNullOrEmpty(request.LanguageId) ? "":request.LanguageId),"languageId");
-
-            var response = await client.PutAsync($"/api/products/{request.Id}", requestContent);
-            var body = await response.Content.ReadAsStringAsync();
+            var response = await client.PutAsync($"api/products/{id}?productGroupId={productGroup}", httpContent);
+            
             if (response.IsSuccessStatusCode)
             {
-                return new ApiSuccessResult<bool>() { };
+                var body = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<ProductResponse>(body);
             }
-            return new ApiErrorResult<bool>(body);
+            return null;
         }
 
         public async Task<ApiResult<bool>> CategoryAssign(int id, CategoryAssignRequest request)
@@ -156,5 +118,132 @@ namespace admin_webapp.Services
 
             return JsonConvert.DeserializeObject<ApiErrorResult<bool>>(result);
         }
+        public async Task<bool> AddItemIntoProduct(int id , AddItemRequest request)
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(_configuration["DomainStringMe"]);
+            var json = JsonConvert.SerializeObject(request);
+            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync($"api/items?productId={id}", httpContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                return true;
+            }
+            return false;
+        }
+        public async Task<List<ProductGroupResponse>> GetAllProductGroup()
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(_configuration["DomainStringMe"]);
+            var response = await client.GetAsync("api/productGroups");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                var productGroups = JsonConvert.DeserializeObject<List<ProductGroupResponse>>(body);
+                return productGroups;
+            }
+            return null;
+        }
+
+        public async Task<bool> UpdateItemIntoProduct(int id, int productId, UpdateItemRequest request)
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(_configuration["DomainStringMe"]);
+            var json = JsonConvert.SerializeObject(request);
+            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await client.PutAsync($"api/items/{id}?productId={productId}", httpContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<Item> GetItemById(int id)
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(_configuration["DomainStringMe"]);
+            var response = await client.GetAsync($"api/items/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                var item = JsonConvert.DeserializeObject<Item>(body);
+                return item;
+            }
+            return null;
+        }
+
+        public async Task<bool> InsertImageUrl(int id, string url)
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(_configuration["DomainStringMe"]);
+            var json = JsonConvert.SerializeObject(new Image() { url = url});
+            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync($"api/itemimages?itemId={id}", httpContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                return true;
+            }
+            return false;
+        }
     }
+}
+public class Image
+{
+    public string url { get; set; }
+}
+public class ProductResponse
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public float Price { get; set; }
+    public string Unit { get; set; }
+    public bool Active { get; set; }
+    public string Warranty { get; set; }
+    public string CreatedAt { get; set; }
+    public string UpdatedAt { get; set; }
+    public ProductGroupResponse ProductGroup { get; set; }
+    public List<Item> Items { get; set; }
+
+}
+public class ProductGroupResponse
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string CreatedAt { get; set; }
+    public string UpdatedAt { get; set; }
+    public CatalogResponse Catalog { get; set; }
+}
+public class Item
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Color { get; set; }
+    public string Size { get; set; }
+    public float SellPrice { get; set; }
+    public float SalePrice { get; set; }
+    public int Quantity { get; set; }
+    public bool Active { get; set; }
+    public string CreatedAt { get; set; }
+    public string UpdateAt { get; set; }
+    public List<ItemImage> ItemImages { get; set; }
+}
+public class ItemImage
+{
+    public int Id { get; set; }
+    public string Url { get; set; }
+    public string CreatedAt { get; set; }
+    public string UpdateAt { get; set; }
 }

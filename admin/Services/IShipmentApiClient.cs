@@ -11,5 +11,6 @@ namespace admin_webapp.Services
     public interface IShipmentApiClient
     {
         Task<ApiResult<PagedResult<ShipmentVm>>> GetPagings(GetShipmentPagingRequest request);
+        Task<ApiResult<bool>> Update(int id, int status,string NoteShipping, float moneyShipping);
     }
 }

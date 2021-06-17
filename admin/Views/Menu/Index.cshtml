@@ -50,7 +50,19 @@
                     renameItem: {
                         label: "Rename",
                         action: function () {
-                            
+                            jQuery.ajax({
+                                url: 'http://localhost:5000/api/menus/rename',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                crossDomain: true,
+                                method: 'POST',
+                                data: JSON.stringify({ "id" : 23 , "text" : "deom" })
+                            }).done(function (data) {
+                                    console.log(data);
+                            }).fail(function () {
+                                    console.log('Failed!');
+                            });
                         }
                     },
                     deleteItem: {
